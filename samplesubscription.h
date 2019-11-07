@@ -30,6 +30,7 @@
 #include "uaclientsdk.h"
 
 using namespace UaClientSdk;
+using namespace std;
 
 class Configuration;
 
@@ -38,7 +39,8 @@ class SampleSubscription : public UaSubscriptionCallback
 	UA_DISABLE_COPY(SampleSubscription);
 
 public:
-	float joints[3];
+	float joints[6];
+	vector<float> testJoints;
 
 public:
 	SampleSubscription(Configuration* pConfiguration);

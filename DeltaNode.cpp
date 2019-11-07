@@ -7,6 +7,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
+#include <vector>
 
 
 
@@ -49,6 +50,9 @@ int main(int, char* [])
 	int lbrJoint1 = 0;
 	int lbrJoint2 = 0;
 	int lbrJoint3 = 0;
+	int lbrJoint4 = 0;
+	int lbrJoint5 = 0;
+	int lbrJoint6 = 0;
 
 	float* BR_joints;
 	int counter = 0;
@@ -82,15 +86,21 @@ int main(int, char* [])
 					simxInt syncho = simxSynchronous(clientID, 1);
 					int start = simxStartSimulation(clientID, simx_opmode_oneshot_wait);
 
-					simxGetObjectHandle(clientID, "UR10_joint1", &lbrJoint1, simx_opmode_oneshot_wait);
-					simxGetObjectHandle(clientID, "UR10_joint2", &lbrJoint2, simx_opmode_oneshot_wait);
-					simxGetObjectHandle(clientID, "UR10_joint3", &lbrJoint3, simx_opmode_oneshot_wait);
+					simxGetObjectHandle(clientID, "IRB140_joint1", &lbrJoint1, simx_opmode_oneshot_wait);
+					simxGetObjectHandle(clientID, "IRB140_joint2", &lbrJoint2, simx_opmode_oneshot_wait);
+					simxGetObjectHandle(clientID, "IRB140_joint3", &lbrJoint3, simx_opmode_oneshot_wait);
+					simxGetObjectHandle(clientID, "IRB140_joint4", &lbrJoint4, simx_opmode_oneshot_wait);
+					simxGetObjectHandle(clientID, "IRB140_joint5", &lbrJoint5, simx_opmode_oneshot_wait);
+					simxGetObjectHandle(clientID, "IRB140_joint6", &lbrJoint6, simx_opmode_oneshot_wait);
 
 
 					//simxPauseCommunication(clientID,true);
 					simxSetJointPosition(clientID, lbrJoint1, 0.0, simx_opmode_oneshot_wait);
 					simxSetJointPosition(clientID, lbrJoint2, 0.0, simx_opmode_oneshot_wait);
 					simxSetJointPosition(clientID, lbrJoint3, 0.0, simx_opmode_oneshot_wait);
+					simxSetJointPosition(clientID, lbrJoint4, 0.0, simx_opmode_oneshot_wait);
+					simxSetJointPosition(clientID, lbrJoint5, 0.0, simx_opmode_oneshot_wait);
+					simxSetJointPosition(clientID, lbrJoint6, 0.0, simx_opmode_oneshot_wait);
 
 					switch (connectionType)
 					{
@@ -151,6 +161,9 @@ int main(int, char* [])
 					simxSetJointPosition(clientID, lbrJoint1, *BR_joints* (PI / 180), simx_opmode_oneshot_wait);
 					simxSetJointPosition(clientID, lbrJoint2, *(BR_joints + 1)* (PI / 180), simx_opmode_oneshot_wait);
 					simxSetJointPosition(clientID, lbrJoint3, *(BR_joints + 2)* (PI / 180), simx_opmode_oneshot_wait);
+					simxSetJointPosition(clientID, lbrJoint4, *(BR_joints + 3)* (PI / 180), simx_opmode_oneshot_wait);
+					simxSetJointPosition(clientID, lbrJoint5, *(BR_joints + 4)* (PI / 180), simx_opmode_oneshot_wait);
+					simxSetJointPosition(clientID, lbrJoint6, *(BR_joints + 5)* (PI / 180), simx_opmode_oneshot_wait);
 				}
 				else {
 					step = STATE_ERROR;

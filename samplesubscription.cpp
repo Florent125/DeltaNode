@@ -66,7 +66,8 @@ void SampleSubscription::dataChange(
 	OpcUa_ReferenceParameter(clientSubscriptionHandle); // We use the callback only for this subscription
 	OpcUa_ReferenceParameter(diagnosticInfos);
 	OpcUa_UInt32 i = 0;
-	float Values[3];
+	float Values[6];
+	vector<float> testValues;
 	OpcUa_Float tmp;
 
 
@@ -78,6 +79,7 @@ void SampleSubscription::dataChange(
 			UaVariant tempValue = dataNotifications[i].Value.Value;
 			UaVariant tempValue2 = UaVariant(dataNotifications[i].Value.ServerTimestamp);
 			printf("  Variable = %d value = %s\n", dataNotifications[i].ClientHandle, tempValue.toString().toUtf8());
+			printf("  DataType = %d value = %s\n", dataNotifications[i].ClientHandle, tempValue.dataType().toString().toUtf8());
 			printf("  Timestamp = %d value = %s\n", dataNotifications[i].ClientHandle, tempValue2.toString().toUtf8());
 			
 			tempValue.toFloat(tmp);
