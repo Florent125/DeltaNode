@@ -113,9 +113,9 @@ UaStatus Configuration::loadConfiguration(const UaString& sConfigurationFile)
     m_applicationName = value.toString();
 
     // Server URLs
-    value = pSettings->value("DiscoveryURL", UaString("opc.tcp://localhost:48010"));
+    value = pSettings->value("DiscoveryURL", UaString("opc.tcp://localhost:4840"));
     m_discoveryUrl = value.toString();
-    value = pSettings->value("ServerUrl", UaString("opc.tcp://localhost:48010"));
+    value = pSettings->value("ServerUrl", UaString("opc.tcp://localhost:4840"));
     m_serverUrl = value.toString();
 
     // Reconnection settings

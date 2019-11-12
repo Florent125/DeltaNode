@@ -65,11 +65,12 @@ void SampleSubscription::dataChange(
 {
 	OpcUa_ReferenceParameter(clientSubscriptionHandle); // We use the callback only for this subscription
 	OpcUa_ReferenceParameter(diagnosticInfos);
-	OpcUa_UInt32 i = 0;
-	float Values[6];
-	vector<float> testValues;
-	OpcUa_Float tmp;
+	OpcUa_UInt32 size, i;
+	// Configure items to add to the subscription
+	UaNodeIdArray lstNodeIds = m_pConfiguration->getNodesToMonitor();
+	size = lstNodeIds.length();
 
+	OpcUa_Float tmp;
 
 	printf("-- DataChange Notification ---------------------------------\n");
 	for (i = 0; i < dataNotifications.length(); i++)
@@ -83,9 +84,8 @@ void SampleSubscription::dataChange(
 			printf("  Timestamp = %d value = %s\n", dataNotifications[i].ClientHandle, tempValue2.toString().toUtf8());
 			
 			tempValue.toFloat(tmp);
-			Values[dataNotifications[i].ClientHandle] = tmp;
-			joints[dataNotifications[i].ClientHandle] = Values[dataNotifications[i].ClientHandle];
-			//printf("Value 0: %f, Value 1: %f, Value 2: %f\n", joints[0], joints[1], joints[2]);
+			opcUaFloat[dataNotifications[i].ClientHandle] = tmp;
+		
 		}
 		else
 		{
@@ -132,6 +132,21 @@ UaStatus SampleSubscription::createSubscription(UaSession* pSession)
 	if (result.isGood())
 	{
 		printf("CreateSubscription succeeded\n");
+		OpcUa_UInt32 size, i;
+		// Configure items to add to the subscription
+		UaNodeIdArray lstNodeIds = m_pConfiguration->getNodesToMonitor();
+		size = lstNodeIds.length();
+
+		if (opcUaFloat.empty())
+		{
+			for (i = 0; i < size; i++)
+			{
+				opcUaFloat.push_back(1.0); //Initialise le vecteur à une taille défini par le sampleconfig.ini
+				printf("Creation de opcUaFloat: %d \n", opcUaFloat.size());
+
+			}
+		}
+		
 	}
 	else
 	{

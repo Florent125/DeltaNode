@@ -54,7 +54,10 @@ int main(int, char* [])
 	int lbrJoint5 = 0;
 	int lbrJoint6 = 0;
 
+	int lbrJointRedundant1 = 0;
+
 	float* BR_joints;
+	vector<float> opcUaFloat;
 	int counter = 0;
 
 	//**********************//
@@ -93,6 +96,8 @@ int main(int, char* [])
 					simxGetObjectHandle(clientID, "IRB140_joint5", &lbrJoint5, simx_opmode_oneshot_wait);
 					simxGetObjectHandle(clientID, "IRB140_joint6", &lbrJoint6, simx_opmode_oneshot_wait);
 
+					simxGetObjectHandle(clientID, "redundantRob_joint1", &lbrJointRedundant1, simx_opmode_oneshot_wait);
+
 
 					//simxPauseCommunication(clientID,true);
 					simxSetJointPosition(clientID, lbrJoint1, 0.0, simx_opmode_oneshot_wait);
@@ -101,6 +106,9 @@ int main(int, char* [])
 					simxSetJointPosition(clientID, lbrJoint4, 0.0, simx_opmode_oneshot_wait);
 					simxSetJointPosition(clientID, lbrJoint5, 0.0, simx_opmode_oneshot_wait);
 					simxSetJointPosition(clientID, lbrJoint6, 0.0, simx_opmode_oneshot_wait);
+
+					simxSetJointPosition(clientID, lbrJointRedundant1, 0.0, simx_opmode_oneshot_wait);
+
 
 					switch (connectionType)
 					{
@@ -158,16 +166,29 @@ int main(int, char* [])
 				if (status.isGood())
 				{
 					BR_joints = pMyClient->getJoints();
-					simxSetJointPosition(clientID, lbrJoint1, *BR_joints* (PI / 180), simx_opmode_oneshot_wait);
+					opcUaFloat = pMyClient->getFloat();
+					//printf("Taille de opcUaFloat: %d \n", opcUaFloat.size());
+
+					/*simxSetJointPosition(clientID, lbrJoint1, *BR_joints* (PI / 180), simx_opmode_oneshot_wait);
 					simxSetJointPosition(clientID, lbrJoint2, *(BR_joints + 1)* (PI / 180), simx_opmode_oneshot_wait);
 					simxSetJointPosition(clientID, lbrJoint3, *(BR_joints + 2)* (PI / 180), simx_opmode_oneshot_wait);
 					simxSetJointPosition(clientID, lbrJoint4, *(BR_joints + 3)* (PI / 180), simx_opmode_oneshot_wait);
 					simxSetJointPosition(clientID, lbrJoint5, *(BR_joints + 4)* (PI / 180), simx_opmode_oneshot_wait);
-					simxSetJointPosition(clientID, lbrJoint6, *(BR_joints + 5)* (PI / 180), simx_opmode_oneshot_wait);
+					simxSetJointPosition(clientID, lbrJoint6, *(BR_joints + 5)* (PI / 180), simx_opmode_oneshot_wait);*/
+					
+					simxSetJointPosition(clientID, lbrJoint1, opcUaFloat[0] * (PI / 180), simx_opmode_oneshot_wait);
+					simxSetJointPosition(clientID, lbrJoint2, opcUaFloat[1] * (PI / 180), simx_opmode_oneshot_wait);
+					simxSetJointPosition(clientID, lbrJoint3, opcUaFloat[2] * (PI / 180), simx_opmode_oneshot_wait);
+					simxSetJointPosition(clientID, lbrJoint4, opcUaFloat[3] * (PI / 180), simx_opmode_oneshot_wait);
+					simxSetJointPosition(clientID, lbrJoint5, opcUaFloat[4] * (PI / 180), simx_opmode_oneshot_wait);
+					simxSetJointPosition(clientID, lbrJoint6, opcUaFloat[5] * (PI / 180), simx_opmode_oneshot_wait);
+
+					simxSetIntegerSignal(clientID, "BaxterVacuumCup#_active", 1, simx_opmode_oneshot_wait); //Vacuum value
+
+					simxSetJointPosition(clientID, lbrJointRedundant1, opcUaFloat[6] * (PI / 180), simx_opmode_oneshot_wait);
 				}
 				else {
-					step = STATE_ERROR;
-					
+					step = STATE_ERROR;					
 				}
 
 				break;

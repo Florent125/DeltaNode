@@ -32,6 +32,35 @@
 using namespace UaClientSdk;
 using namespace std;
 
+typedef enum OpcUaDataType_enum { //The datatypes of the variables from OpcUa server
+	TYPE_BOOLEAN = 1,
+	TYPE_SBYTE, TYPE_BYTE,
+	TYPE_INT16, TYPE_UINT16,
+	TYPE_INT32, TYPE_UINT32,
+	TYPE_INT64, TYPE_UINT64,
+	TYPE_FLOAT,
+	TYPE_DOUBLE,
+	TYPE_STRING,
+	TYPE_DATETIME,
+	TYPE_GUID,
+	TYPE_BYTE_STRING,
+	TYPE_XML_ELEMENT,
+	TYPE_NODEID,
+	TYPE_EXPANDED_NODEDID,
+	TYPE_STATUS_CODE,
+	TYPE_QUALIFIED_NAME,
+	TYPE_LOCALIZED_TEXT,
+	TYPE_STRUCTURE,
+	TYPE_DATA_VALUE,
+	TYPE_BASE_DATATYPE,
+	TYPE_DIAGNOSTIC_INFO,
+	TYPE_NUMBER,
+	TYPE_INTEGER,
+	TYPE_UINTEGER,
+	TYPE_ENUMERATION,
+	TYPE_IMAGE
+};
+
 class Configuration;
 
 class SampleSubscription : public UaSubscriptionCallback
@@ -40,7 +69,7 @@ class SampleSubscription : public UaSubscriptionCallback
 
 public:
 	float joints[6];
-	vector<float> testJoints;
+	vector<float> opcUaFloat;
 
 public:
 	SampleSubscription(Configuration* pConfiguration);

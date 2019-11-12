@@ -37,7 +37,6 @@ SampleClient::SampleClient()
 	m_pSession = new UaSession();
 	m_pConfiguration = new Configuration();
 	m_pSampleSubscription = new SampleSubscription(m_pConfiguration);
-
 }
 
 SampleClient::~SampleClient()
@@ -825,4 +824,9 @@ int SampleClient::userAcceptCertificate()
 float * SampleClient::getJoints()
 {
 	return m_pSampleSubscription->joints;
+}
+
+vector<float> SampleClient::getFloat()
+{
+	return m_pSampleSubscription->opcUaFloat;
 }

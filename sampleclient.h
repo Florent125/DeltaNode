@@ -33,6 +33,7 @@ class SampleSubscription;
 class Configuration;
 
 using namespace UaClientSdk;
+using namespace std;
 
 class SampleClient : public UaSessionCallback
 {
@@ -66,6 +67,9 @@ public:
 
 	//Get joints value
 	float* getJoints();
+
+	//Get the float values
+	vector<float> getFloat();
 
 private:
 	// helper methods
