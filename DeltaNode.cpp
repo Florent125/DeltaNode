@@ -68,8 +68,12 @@ int main(int, char* [])
 	connectionType_enum connectionType = TYPE_OPCUA;
 	bool exit = false;
 	bool WORK = true;
+	bool testingOnce = FALSE;
+	simxInt executeChildScript;
+	simxInt executeMainScript;
 
 	while (!exit) {
+
 		switch (step)
 		{
 			case STATE_INIT:
@@ -86,8 +90,9 @@ int main(int, char* [])
 				if (clientID != -1)
 				{
 					cout << "Connection status to VREP: SUCCESS" << endl;
-					simxInt syncho = simxSynchronous(clientID, 1);
-					int start = simxStartSimulation(clientID, simx_opmode_oneshot_wait);
+					simxInt syncho = simxSynchronous(clientID, 0);
+					int start = simxStartSimulation(clientID, simx_opmode_oneshot);
+					
 
 					simxGetObjectHandle(clientID, "IRB140_joint1", &lbrJoint1, simx_opmode_oneshot_wait);
 					simxGetObjectHandle(clientID, "IRB140_joint2", &lbrJoint2, simx_opmode_oneshot_wait);
@@ -96,7 +101,7 @@ int main(int, char* [])
 					simxGetObjectHandle(clientID, "IRB140_joint5", &lbrJoint5, simx_opmode_oneshot_wait);
 					simxGetObjectHandle(clientID, "IRB140_joint6", &lbrJoint6, simx_opmode_oneshot_wait);
 
-					simxGetObjectHandle(clientID, "redundantRob_joint1", &lbrJointRedundant1, simx_opmode_oneshot_wait);
+					//simxGetObjectHandle(clientID, "redundantRob_joint1", &lbrJointRedundant1, simx_opmode_oneshot_wait);
 
 
 					//simxPauseCommunication(clientID,true);
@@ -114,9 +119,10 @@ int main(int, char* [])
 					{
 					case TYPE_OPCUA:
 						cout << "OpcUa connection chosen" << endl;
-						step = STATE_CONNECT_OPCUA;
+						step = STATE_CONNECT_OPCUA;						
 						break;
 					}
+					//step = STATE_TESTING_PURPOSE;
 
 				}
 
@@ -176,14 +182,21 @@ int main(int, char* [])
 					simxSetJointPosition(clientID, lbrJoint5, *(BR_joints + 4)* (PI / 180), simx_opmode_oneshot_wait);
 					simxSetJointPosition(clientID, lbrJoint6, *(BR_joints + 5)* (PI / 180), simx_opmode_oneshot_wait);*/
 					
-					simxSetJointPosition(clientID, lbrJoint1, opcUaFloat[0] * (PI / 180), simx_opmode_oneshot_wait);
+					/*simxSetJointPosition(clientID, lbrJoint1, opcUaFloat[0] * (PI / 180), simx_opmode_oneshot_wait);
 					simxSetJointPosition(clientID, lbrJoint2, opcUaFloat[1] * (PI / 180), simx_opmode_oneshot_wait);
 					simxSetJointPosition(clientID, lbrJoint3, opcUaFloat[2] * (PI / 180), simx_opmode_oneshot_wait);
 					simxSetJointPosition(clientID, lbrJoint4, opcUaFloat[3] * (PI / 180), simx_opmode_oneshot_wait);
 					simxSetJointPosition(clientID, lbrJoint5, opcUaFloat[4] * (PI / 180), simx_opmode_oneshot_wait);
-					simxSetJointPosition(clientID, lbrJoint6, opcUaFloat[5] * (PI / 180), simx_opmode_oneshot_wait);
+					simxSetJointPosition(clientID, lbrJoint6, opcUaFloat[5] * (PI / 180), simx_opmode_oneshot_wait);*/
+					
+					simxSetJointPosition(clientID, lbrJoint1, opcUaFloat[0] * (PI / 180), simx_opmode_streaming + 5);
+					simxSetJointPosition(clientID, lbrJoint2, opcUaFloat[1] * (PI / 180), simx_opmode_streaming + 5);
+					simxSetJointPosition(clientID, lbrJoint3, opcUaFloat[2] * (PI / 180), simx_opmode_streaming + 5);
+					simxSetJointPosition(clientID, lbrJoint4, opcUaFloat[3] * (PI / 180), simx_opmode_streaming + 5);
+					simxSetJointPosition(clientID, lbrJoint5, opcUaFloat[4] * (PI / 180), simx_opmode_streaming + 5);
+					simxSetJointPosition(clientID, lbrJoint6, opcUaFloat[5] * (PI / 180), simx_opmode_streaming + 5);
 
-					simxSetIntegerSignal(clientID, "BaxterVacuumCup#_active", 1, simx_opmode_oneshot_wait); //Vacuum value
+					simxSetIntegerSignal(clientID, "BaxterVacuumCup_active", 1, simx_opmode_oneshot_wait); //Vacuum value
 
 					simxSetJointPosition(clientID, lbrJointRedundant1, opcUaFloat[6] * (PI / 180), simx_opmode_oneshot_wait);
 				}
@@ -206,6 +219,11 @@ int main(int, char* [])
 
 			case STATE_ERROR:
 				cout << "An error occured" << endl;
+				break;
+
+			case STATE_TESTING_PURPOSE:
+				
+				
 				break;
 
 		}
