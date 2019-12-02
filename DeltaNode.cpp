@@ -37,10 +37,15 @@ int main(int, char* [])
 
 	//Get current path to build configuration file name
 	UaString sConfigFile(getAppPath());
-	sConfigFile += "/sampleconfig.ini";
+	sConfigFile += "/mySampleconfig.ini";
 
 	//Create configuration object and load configuration
 	Configuration* pMyConfiguration = new Configuration();
+
+	//Variables to write to the server
+	UaVariantArray opcUaArrayVariableToWrite;
+	UaVariant variableToWrite;
+	opcUaArrayVariableToWrite.create(1); //Pr le moment on récupère que la valeur du laser
 
 	//***********************//
 	//**Init VREP variables**//
@@ -56,13 +61,11 @@ int main(int, char* [])
 
 	int lbrJointRedundant1 = 0;
 
-	float* BR_joints;
 	vector<float> opcUaFloat;
+	vector<bool> opcUaBool;
+	bool suctionTool = FALSE;
+	int diDetectedObject = 0;
 	int counter = 0;
-
-	//**********************//
-	//**Init PVI variables**//
-	//**********************//
 
 	stateMachineStep_enum step = STATE_INIT;
 	connectionType_enum connectionType = TYPE_OPCUA;
@@ -79,6 +82,9 @@ int main(int, char* [])
 			case STATE_INIT:
 				cout << "Init step" << endl;
 				step = STATE_CONNECT_VREP;
+
+				//Testing OpcUa
+				//step = STATE_CONNECT_OPCUA;
 			break;
 
 			case STATE_CONNECT_VREP:
@@ -101,9 +107,6 @@ int main(int, char* [])
 					simxGetObjectHandle(clientID, "IRB140_joint5", &lbrJoint5, simx_opmode_oneshot_wait);
 					simxGetObjectHandle(clientID, "IRB140_joint6", &lbrJoint6, simx_opmode_oneshot_wait);
 
-					//simxGetObjectHandle(clientID, "redundantRob_joint1", &lbrJointRedundant1, simx_opmode_oneshot_wait);
-
-
 					//simxPauseCommunication(clientID,true);
 					simxSetJointPosition(clientID, lbrJoint1, 0.0, simx_opmode_oneshot_wait);
 					simxSetJointPosition(clientID, lbrJoint2, 0.0, simx_opmode_oneshot_wait);
@@ -111,9 +114,6 @@ int main(int, char* [])
 					simxSetJointPosition(clientID, lbrJoint4, 0.0, simx_opmode_oneshot_wait);
 					simxSetJointPosition(clientID, lbrJoint5, 0.0, simx_opmode_oneshot_wait);
 					simxSetJointPosition(clientID, lbrJoint6, 0.0, simx_opmode_oneshot_wait);
-
-					simxSetJointPosition(clientID, lbrJointRedundant1, 0.0, simx_opmode_oneshot_wait);
-
 
 					switch (connectionType)
 					{
@@ -149,16 +149,14 @@ int main(int, char* [])
 
 				if (status.isGood())
 				{
-					// register nodes and do a write with the registered nodeIds
-					pMyClient->registerNodes();
-					pMyClient->writeRegistered();
-
 					// Create subscription
 					status = pMyClient->subscribe();
 
 					//OpcUa connection is done, go to STATE_RUN_CONNECTION
 					step = STATE_RUN_CONNECTION;
 				}
+
+				//step = STATE_TESTING_PURPOSE;
 
 			break;
 
@@ -171,16 +169,8 @@ int main(int, char* [])
 			case STATE_RUN_CONNECTION:
 				if (status.isGood())
 				{
-					BR_joints = pMyClient->getJoints();
-					opcUaFloat = pMyClient->getFloat();
-					//printf("Taille de opcUaFloat: %d \n", opcUaFloat.size());
-
-					/*simxSetJointPosition(clientID, lbrJoint1, *BR_joints* (PI / 180), simx_opmode_oneshot_wait);
-					simxSetJointPosition(clientID, lbrJoint2, *(BR_joints + 1)* (PI / 180), simx_opmode_oneshot_wait);
-					simxSetJointPosition(clientID, lbrJoint3, *(BR_joints + 2)* (PI / 180), simx_opmode_oneshot_wait);
-					simxSetJointPosition(clientID, lbrJoint4, *(BR_joints + 3)* (PI / 180), simx_opmode_oneshot_wait);
-					simxSetJointPosition(clientID, lbrJoint5, *(BR_joints + 4)* (PI / 180), simx_opmode_oneshot_wait);
-					simxSetJointPosition(clientID, lbrJoint6, *(BR_joints + 5)* (PI / 180), simx_opmode_oneshot_wait);*/
+					opcUaFloat = pMyClient->getOpcUaFloat();
+					opcUaBool = pMyClient->getOpcUaBool();
 					
 					/*simxSetJointPosition(clientID, lbrJoint1, opcUaFloat[0] * (PI / 180), simx_opmode_oneshot_wait);
 					simxSetJointPosition(clientID, lbrJoint2, opcUaFloat[1] * (PI / 180), simx_opmode_oneshot_wait);
@@ -196,9 +186,16 @@ int main(int, char* [])
 					simxSetJointPosition(clientID, lbrJoint5, opcUaFloat[4] * (PI / 180), simx_opmode_streaming + 5);
 					simxSetJointPosition(clientID, lbrJoint6, opcUaFloat[5] * (PI / 180), simx_opmode_streaming + 5);
 
-					simxSetIntegerSignal(clientID, "BaxterVacuumCup_active", 1, simx_opmode_oneshot_wait); //Vacuum value
+					simxSetIntegerSignal(clientID, "BaxterVacuumCup_active", opcUaBool[6], simx_opmode_oneshot_wait); //Vacuum value
 
-					simxSetJointPosition(clientID, lbrJointRedundant1, opcUaFloat[6] * (PI / 180), simx_opmode_oneshot_wait);
+					//Récupérer la valeur du laser
+					simxGetIntegerSignal(clientID, "conveyorObjectDetected", &diDetectedObject, simx_opmode_oneshot_wait);
+
+					//Ecrire la valeur du laser par com opcUa
+					variableToWrite.setBool((bool)diDetectedObject);
+					variableToWrite.copyTo(&opcUaArrayVariableToWrite[0]);
+					pMyClient->writeCyclicValues(opcUaArrayVariableToWrite);
+
 				}
 				else {
 					step = STATE_ERROR;					
@@ -223,6 +220,16 @@ int main(int, char* [])
 
 			case STATE_TESTING_PURPOSE:
 				
+				// Wait for user command.
+				printf("\nPress Enter to do a simple browse\n");
+				getchar();
+				// Simple Browse
+				status = pMyClient->browseSimple();
+
+				printf("\nPress Enter to browse with continuation point\n");
+				getchar();
+				// Browse with continuation point
+				status = pMyClient->browseContinuationPoint();
 				
 				break;
 

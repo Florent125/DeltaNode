@@ -64,12 +64,15 @@ public:
 	UaStatus unsubscribe();
 	UaStatus registerNodes();
 	UaStatus unregisterNodes();
-
-	//Get joints value
-	float* getJoints();
+	//My service call
+	UaStatus writeCyclicValues(const UaVariantArray& valuesToWrite); /*Write values cyclically to the configured nodes*/
+	UaStatus writeInternalCyclicValues(const UaNodeIdArray& nodesToWrite, const UaVariantArray& valuesToWrite);
 
 	//Get the float values
-	vector<float> getFloat();
+	vector<float> getOpcUaFloat();
+
+	//Get the boolean values
+	vector<bool> getOpcUaBool();
 
 private:
 	// helper methods

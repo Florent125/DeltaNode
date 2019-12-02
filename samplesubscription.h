@@ -68,8 +68,10 @@ class SampleSubscription : public UaSubscriptionCallback
 	UA_DISABLE_COPY(SampleSubscription);
 
 public:
-	float joints[6];
+	OpcUaDataType_enum OpcUaDataType;
 	vector<float> opcUaFloat;
+	vector<bool> opcUaBool;
+	bool suctionTool;
 
 public:
 	SampleSubscription(Configuration* pConfiguration);

@@ -27,6 +27,10 @@
 #include "uasubscription.h"
 #include "uasession.h"
 #include "configuration.h"
+#include <iostream>
+#include <string>
+
+using namespace std;
 
 SampleSubscription::SampleSubscription(Configuration* pConfiguration)
 	: m_pSession(NULL),
@@ -70,7 +74,10 @@ void SampleSubscription::dataChange(
 	UaNodeIdArray lstNodeIds = m_pConfiguration->getNodesToMonitor();
 	size = lstNodeIds.length();
 
-	OpcUa_Float tmp;
+	OpcUa_Float tmpFloat;
+	OpcUa_Boolean tmpBool;
+	OpcUa_Int datatype;
+	int normalDatatype;
 
 	printf("-- DataChange Notification ---------------------------------\n");
 	for (i = 0; i < dataNotifications.length(); i++)
@@ -83,8 +90,21 @@ void SampleSubscription::dataChange(
 			printf("  DataType = %d value = %s\n", dataNotifications[i].ClientHandle, tempValue.dataType().toString().toUtf8());
 			printf("  Timestamp = %d value = %s\n", dataNotifications[i].ClientHandle, tempValue2.toString().toUtf8());
 			
-			tempValue.toFloat(tmp);
-			opcUaFloat[dataNotifications[i].ClientHandle] = tmp;
+
+			if (tempValue.dataType() == 1) //Boolean (has to be changed with the enum)
+			{
+				tempValue.toBool(tmpBool);
+				opcUaBool[dataNotifications[i].ClientHandle] = tmpBool;
+				//Test d'un outil avec entrée en booleen
+				suctionTool = tmpBool;
+			}
+
+			if (tempValue.dataType() == 10) //Float (has to be changed with the enum)
+			{
+				tempValue.toFloat(tmpFloat);
+				opcUaFloat[dataNotifications[i].ClientHandle] = tmpFloat;
+			}
+			
 		
 		}
 		else
@@ -137,15 +157,11 @@ UaStatus SampleSubscription::createSubscription(UaSession* pSession)
 		UaNodeIdArray lstNodeIds = m_pConfiguration->getNodesToMonitor();
 		size = lstNodeIds.length();
 
-		if (opcUaFloat.empty())
-		{
-			for (i = 0; i < size; i++)
-			{
-				opcUaFloat.push_back(1.0); //Initialise le vecteur à une taille défini par le sampleconfig.ini
-				printf("Creation de opcUaFloat: %d \n", opcUaFloat.size());
-
-			}
-		}
+		//Resize des vecteurs à la taille totales des variables bindées
+		opcUaBool.resize(size);
+		opcUaFloat.resize(size);
+		printf("Creation de opcUaFloat: %i \n", opcUaFloat.size());
+		printf("Creation de opcUaBool: %i \n", opcUaBool.size());
 		
 	}
 	else

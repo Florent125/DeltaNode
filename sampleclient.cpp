@@ -537,9 +537,14 @@ UaStatus SampleClient::browseContinuationPoint()
 	UaStatus result;
 	UaNodeId nodeToBrowse;
 
-	// browse from Massfolder with max references to return set to 5
-	nodeToBrowse = UaNodeId("Demo", 2);
-	result = browseInternal(nodeToBrowse, 5);
+	// browse from Massfolder with max references to return set to maximum (0)
+	nodeToBrowse = UaNodeId(85, 0); //Objects
+	nodeToBrowse = UaNodeId(20000, 4); //PLC
+	nodeToBrowse = UaNodeId(20001, 4); //Modules
+	nodeToBrowse = UaNodeId("::", 6); //<Default>
+	//nodeToBrowse = UaNodeId("::AsGlobalPV", 6); //Global PV
+	nodeToBrowse = UaNodeId("::ABB", 6); //ABB PV
+	result = browseInternal(nodeToBrowse, 0);
 
 	return result;
 }
@@ -603,6 +608,74 @@ UaStatus SampleClient::write()
 	result = writeInternal(
 		m_pConfiguration->getNodesToWrite(),
 		m_pConfiguration->getWriteValues());
+
+	return result;
+}
+
+UaStatus SampleClient::writeInternalCyclicValues(const UaNodeIdArray& nodesToWrite, const UaVariantArray& valuesToWrite)
+{
+	UaStatus            result;
+	ServiceSettings     serviceSettings;
+	UaWriteValues       writeValues;
+	UaStatusCodeArray   results;
+	UaDiagnosticInfos   diagnosticInfos;
+
+	// check in parameters
+	if (nodesToWrite.length() != valuesToWrite.length())
+	{
+		return OpcUa_BadInvalidArgument;
+	}
+
+	// write all nodes from the configuration
+	writeValues.create(nodesToWrite.length());
+
+	for (OpcUa_UInt32 i = 0; i < writeValues.length(); i++)
+	{
+		writeValues[i].AttributeId = OpcUa_Attributes_Value;
+		OpcUa_NodeId_CopyTo(&nodesToWrite[i], &writeValues[i].NodeId);
+		// set value to write
+		OpcUa_Variant_CopyTo(&valuesToWrite[i], &writeValues[i].Value.Value);
+	}
+
+	result = m_pSession->write(
+		serviceSettings,
+		writeValues,
+		results,
+		diagnosticInfos);
+
+	if (result.isGood())
+	{
+		// Write service succeded - check individual status codes
+		for (OpcUa_UInt32 i = 0; i < results.length(); i++)
+		{
+			if (OpcUa_IsGood(results[i]))
+			{
+				//UaVariant tempValue = writeValues[i].Value.Value;
+				//printf("Write succeeded for item[%d], Value = %s \n", i, tempValue.toString().toUtf8());
+			}
+			else
+			{
+				printf("Write failed for item[%d] with status %s\n", i, UaStatus(results[i]).toString().toUtf8());
+			}
+		}
+	}
+	else
+	{
+		// Service call failed
+		printf("Write failed with status %s\n", result.toString().toUtf8());
+	}
+
+	return result;
+}
+
+UaStatus SampleClient::writeCyclicValues(const UaVariantArray& valuesToWrite)
+{
+	UaStatus result;
+
+	// write all nodes from the configuration with the cyclic values
+	result = writeInternalCyclicValues(
+		m_pConfiguration->getNodesToWrite(),
+		valuesToWrite);
 
 	return result;
 }
@@ -821,12 +894,12 @@ int SampleClient::userAcceptCertificate()
 	return result;
 }
 
-float * SampleClient::getJoints()
-{
-	return m_pSampleSubscription->joints;
-}
-
-vector<float> SampleClient::getFloat()
+vector<float> SampleClient::getOpcUaFloat()
 {
 	return m_pSampleSubscription->opcUaFloat;
+}
+
+vector<bool> SampleClient::getOpcUaBool()
+{
+	return m_pSampleSubscription->opcUaBool;
 }

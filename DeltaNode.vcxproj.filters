@@ -36,6 +36,9 @@
     <ClCompile Include="shutdown.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="leafOpcUaClient.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="extApi.h">
@@ -59,8 +62,12 @@
     <ClInclude Include="DeltaNode.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="leafOpcUaClient.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\..\..\..\Program Files (x86)\UnifiedAutomation\UaSdkCppBundleEval\bin\sampleconfig.ini" />
+    <None Include="..\..\..\..\..\..\..\Program Files (x86)\UnifiedAutomation\UaSdkCppBundleEval\bin\mySampleconfig.ini" />
   </ItemGroup>
 </Project>
