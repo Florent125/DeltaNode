@@ -81,9 +81,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>C:\Program Files (x86)\UnifiedAutomation\UaSdkCppBundleEval\bin</OutDir>
-    <IntDir>DeltaNode.dir\Debug\</IntDir>
-    <TargetName>DeltaNoded</TargetName>
+    <OutDir>C:\Program Files (x86)\UnifiedAutomation\UaSdkCppBundlePubSubEval\bin</OutDir>
+    <IntDir>obj\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -144,15 +144,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;NON_MATLAB_PARSING=1;MAX_EXT_API_CONNECTIONS=255;_CRT_SECURE_NO_WARNINGS;DO_NOT_USE_SHARED_MEMORY;_UA_STACK_USE_DLL;UNICODE;_UNICODE;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Program Files %28x86%29\UnifiedAutomation\UaSdkCppBundleEval\include\uastack;C:\Program Files %28x86%29\UnifiedAutomation\UaSdkCppBundleEval\include\uabasecpp;C:\Program Files %28x86%29\UnifiedAutomation\UaSdkCppBundleEval\include\uaclientcpp;C:\Program Files %28x86%29\UnifiedAutomation\UaSdkCppBundleEval\include\uapkicpp;C:\Program Files %28x86%29\UnifiedAutomation\UaSdkCppBundleEval\include\xmlparsercpp;C:\Program Files %28x86%29\UnifiedAutomation\UaSdkCppBundleEval\third-party\win64\vs2015\openssl\inc32;C:\Program Files %28x86%29\UnifiedAutomation\UaSdkCppBundleEval\third-party\win64\vs2015\libxml2\include;C:\Program Files %28x86%29\UnifiedAutomation\UaSdkCppBundleEval\examples\utilities;C:\Program Files\V-REP3\V-REP_PRO_EDU\programming\remoteApi;C:\Program Files\V-REP3\V-REP_PRO_EDU\programming\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files %28x86%29\UnifiedAutomation\UaSdkCppBundlePubSubEval\include\uastack;C:\Program Files %28x86%29\UnifiedAutomation\UaSdkCppBundlePubSubEval\include\uabasecpp;C:\Program Files %28x86%29\UnifiedAutomation\UaSdkCppBundlePubSubEval\include\uaclientcpp;C:\Program Files %28x86%29\UnifiedAutomation\UaSdkCppBundlePubSubEval\include\uapkicpp;C:\Program Files %28x86%29\UnifiedAutomation\UaSdkCppBundlePubSubEval\include\xmlparsercpp;C:\Program Files %28x86%29\UnifiedAutomation\UaSdkCppBundlePubSubEval\third-party\win64\vs2015\openssl\inc32;C:\Program Files %28x86%29\UnifiedAutomation\UaSdkCppBundlePubSubEval\third-party\win64\vs2015\libxml2\include;C:\Program Files %28x86%29\UnifiedAutomation\UaSdkCppBundlePubSubEval\examples\utilities;C:\Program Files\CoppeliaRobotics\CoppeliaSimEdu\programming\remoteApi;C:\Program Files\CoppeliaRobotics\CoppeliaSimEdu\programming\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Program Files %28x86%29\UnifiedAutomation\UaSdkCppBundleEval\lib;C:\Program Files %28x86%29\UnifiedAutomation\UaSdkCppBundleEval\third-party\win64\vs2015\libxml2\out32dll;C:\Program Files %28x86%29\UnifiedAutomation\UaSdkCppBundleEval\third-party\win64\vs2015\openssl\out32dll;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>uastack.lib;uabasecpp.lib;uapkicpp.lib;uaclientcpp.lib;crypt32.lib;libeay32.lib;ws2_32.lib;rpcrt4.lib;xmlparsercpp.lib;libxml2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Program Files (x86)\UnifiedAutomation\UaSdkCppBundlePubSubEval\lib;C:\Program Files (x86)\UnifiedAutomation\UaSdkCppBundlePubSubEval\third-party\win64\vs2015\libxml2\out32dll;C:\Program Files (x86)\UnifiedAutomation\UaSdkCppBundlePubSubEval\third-party\win64\vs2015\openssl\out32dll;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>uastack.lib;uabasecpp.lib;uapkicpp.lib;uaclientcpp.lib;crypt32.lib;ws2_32.lib;rpcrt4.lib;xmlparsercpp.lib;libxml2.lib;libcrypto.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -167,9 +167,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="configuration.h" />
+    <ClInclude Include="DeltaNode.h" />
     <ClInclude Include="extApi.h" />
     <ClInclude Include="extApiPlatform.h" />
-    <ClInclude Include="DeltaNode.h" />
     <ClInclude Include="leafOpcUaClient.h" />
     <ClInclude Include="sampleclient.h" />
     <ClInclude Include="samplesubscription.h" />
