@@ -65,14 +65,21 @@ public:
 	UaStatus registerNodes();
 	UaStatus unregisterNodes();
 	//My service call
-	UaStatus writeCyclicValues(const UaVariantArray& valuesToWrite); /*Write values cyclically to the configured nodes*/
+	 /*Write values cyclically to the configured nodes*/
+	UaStatus writeCyclicValues(const UaVariantArray& valuesToWrite);
 	UaStatus writeInternalCyclicValues(const UaNodeIdArray& nodesToWrite, const UaVariantArray& valuesToWrite);
+	UaStatus browseAndReturnReferences(const UaNodeId& nodeToBrowse, OpcUa_UInt32 maxReferencesToReturn, UaReferenceDescriptions *initArrayReference);
+	UaStatus browseFromRoot();
 
 	//Get the float values
 	vector<float> getOpcUaFloat();
 
 	//Get the boolean values
 	vector<bool> getOpcUaBool();
+
+	//UaNodeAray testing
+	UaNodeIdArray testingArrayOpcUa;
+	int numberOfNode = 0;
 
 private:
 	// helper methods

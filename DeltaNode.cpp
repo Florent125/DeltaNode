@@ -47,33 +47,34 @@ int main(int, char* [])
 	UaVariant variableToWrite;
 	opcUaArrayVariableToWrite.create(1); //Pr le moment on récupère que la valeur du laser
 
+	//Reading continuously variables
+	vector<float> opcUaFloat;
+	vector<bool> opcUaBool;
+	bool suctionTool		= FALSE;
+	int diObjectDetected	= 0;
+	int counter				= 0;
+
 	//***********************//
 	//**Init VREP variables**//
 	//***********************//
-	int clientID = 0;
-	bool VERBOSE = true;
-	int lbrJoint1 = 0;
-	int lbrJoint2 = 0;
-	int lbrJoint3 = 0;
-	int lbrJoint4 = 0;
-	int lbrJoint5 = 0;
-	int lbrJoint6 = 0;
-
+	int clientID	= 0;
+	bool VERBOSE	= true;
+	int lbrJoint1	= 0;
+	int lbrJoint2	= 0;
+	int lbrJoint3	= 0;
+	int lbrJoint4	= 0;
+	int lbrJoint5	= 0;
+	int lbrJoint6	= 0;
 	int lbrJointRedundant1 = 0;
 
-	vector<float> opcUaFloat;
-	vector<bool> opcUaBool;
-	bool suctionTool = FALSE;
-	int diDetectedObject = 0;
-	int counter = 0;
-
+	//***************************//
+	//**State Machine Variables**//
+	//***************************//
 	stateMachineStep_enum step = STATE_INIT;
 	connectionType_enum connectionType = TYPE_OPCUA;
 	bool exit = false;
 	bool WORK = true;
 	bool testingOnce = FALSE;
-	simxInt executeChildScript;
-	simxInt executeMainScript;
 
 	while (!exit) {
 
@@ -84,7 +85,7 @@ int main(int, char* [])
 				step = STATE_CONNECT_VREP;
 
 				//Testing OpcUa
-				//step = STATE_CONNECT_OPCUA;
+				step = STATE_CONNECT_OPCUA;
 			break;
 
 			case STATE_CONNECT_VREP:
@@ -147,16 +148,16 @@ int main(int, char* [])
 					pMyConfiguration = NULL;
 				}
 
-				if (status.isGood())
+				/*if (status.isGood())
 				{
 					// Create subscription
 					status = pMyClient->subscribe();
 
 					//OpcUa connection is done, go to STATE_RUN_CONNECTION
 					step = STATE_RUN_CONNECTION;
-				}
+				}*/
 
-				//step = STATE_TESTING_PURPOSE;
+				step = STATE_TESTING_PURPOSE;
 
 			break;
 
@@ -167,17 +168,11 @@ int main(int, char* [])
 				break;
 
 			case STATE_RUN_CONNECTION:
+				cout << "Code is running" << endl;
 				if (status.isGood())
 				{
 					opcUaFloat = pMyClient->getOpcUaFloat();
 					opcUaBool = pMyClient->getOpcUaBool();
-					
-					/*simxSetJointPosition(clientID, lbrJoint1, opcUaFloat[0] * (PI / 180), simx_opmode_oneshot_wait);
-					simxSetJointPosition(clientID, lbrJoint2, opcUaFloat[1] * (PI / 180), simx_opmode_oneshot_wait);
-					simxSetJointPosition(clientID, lbrJoint3, opcUaFloat[2] * (PI / 180), simx_opmode_oneshot_wait);
-					simxSetJointPosition(clientID, lbrJoint4, opcUaFloat[3] * (PI / 180), simx_opmode_oneshot_wait);
-					simxSetJointPosition(clientID, lbrJoint5, opcUaFloat[4] * (PI / 180), simx_opmode_oneshot_wait);
-					simxSetJointPosition(clientID, lbrJoint6, opcUaFloat[5] * (PI / 180), simx_opmode_oneshot_wait);*/
 					
 					simxSetJointPosition(clientID, lbrJoint1, opcUaFloat[0] * (PI / 180), simx_opmode_streaming + 5);
 					simxSetJointPosition(clientID, lbrJoint2, opcUaFloat[1] * (PI / 180), simx_opmode_streaming + 5);
@@ -189,10 +184,10 @@ int main(int, char* [])
 					simxSetIntegerSignal(clientID, "BaxterVacuumCup_active", opcUaBool[6], simx_opmode_oneshot_wait); //Vacuum value
 
 					//Récupérer la valeur du laser
-					simxGetIntegerSignal(clientID, "conveyorObjectDetected", &diDetectedObject, simx_opmode_oneshot_wait);
+					simxGetIntegerSignal(clientID, "conveyorObjectDetected", &diObjectDetected, simx_opmode_oneshot_wait);
 
 					//Ecrire la valeur du laser par com opcUa
-					variableToWrite.setBool((bool)diDetectedObject);
+					variableToWrite.setBool((bool)diObjectDetected);
 					variableToWrite.copyTo(&opcUaArrayVariableToWrite[0]);
 					pMyClient->writeCyclicValues(opcUaArrayVariableToWrite);
 

@@ -30,6 +30,8 @@
 #include "uadiscovery.h"
 #include "uapkicertificate.h"
 #include "uaplatformdefs.h"
+#include <uaarraytemplates.h>
+#include <opcua_builtintypes.h>
 
 
 SampleClient::SampleClient()
@@ -532,19 +534,38 @@ UaStatus SampleClient::browseSimple()
 	return result;
 }
 
-UaStatus SampleClient::browseContinuationPoint()
+UaStatus SampleClient::browseFromRoot()
 {
 	UaStatus result;
 	UaNodeId nodeToBrowse;
+
+	// browse from root folder with no limitation of references to return
+	nodeToBrowse = UaNodeId(OpcUaId_RootFolder);
+	result = browseInternal(nodeToBrowse, 0);
+
+	return result;
+}
+
+UaStatus SampleClient::browseContinuationPoint()
+{
+	UaStatus result, resultCreateNodeArray;
+	UaNodeId nodeToBrowse;
+	UaReferenceDescriptions testReferenceDescriptions;
 
 	// browse from Massfolder with max references to return set to maximum (0)
 	nodeToBrowse = UaNodeId(85, 0); //Objects
 	nodeToBrowse = UaNodeId(20000, 4); //PLC
 	nodeToBrowse = UaNodeId(20001, 4); //Modules
 	nodeToBrowse = UaNodeId("::", 6); //<Default>
-	//nodeToBrowse = UaNodeId("::AsGlobalPV", 6); //Global PV
+	nodeToBrowse = UaNodeId("::AsGlobalPV", 6); //Global PV
 	nodeToBrowse = UaNodeId("::ABB", 6); //ABB PV
-	result = browseInternal(nodeToBrowse, 0);
+	nodeToBrowse = UaNodeId("Demo.Static.Scalar", 2); //Demo scalaire
+	nodeToBrowse = UaNodeId(OpcUaId_RootFolder); //RootFolder
+	//result = browseInternal(nodeToBrowse, 0);
+	resultCreateNodeArray = browseAndReturnReferences(nodeToBrowse, 0, &testReferenceDescriptions);
+	//printf("Print Results again \n");
+	//printBrowseResults(testReferenceDescriptions);
+	printf("Found %i Nodes", numberOfNode);
 
 	return result;
 }
@@ -668,6 +689,69 @@ UaStatus SampleClient::writeInternalCyclicValues(const UaNodeIdArray& nodesToWri
 	return result;
 }
 
+UaStatus SampleClient::browseAndReturnReferences(const UaNodeId& nodeToBrowse, OpcUa_UInt32 maxReferencesToReturn, UaReferenceDescriptions* initArrayReference)
+{
+	UaStatus result, resultRecursive;
+
+	ServiceSettings serviceSettings;
+	BrowseContext browseContext;
+	UaByteString continuationPoint;
+	UaReferenceDescriptions referenceDescriptionsPrevious;
+
+	// configure browseContext
+	browseContext.browseDirection = OpcUa_BrowseDirection_Forward;
+	browseContext.referenceTypeId = OpcUaId_HierarchicalReferences;
+	browseContext.includeSubtype = OpcUa_True;
+	browseContext.maxReferencesToReturn = maxReferencesToReturn;
+
+	printf("\nBrowsing from Node %s...\n", nodeToBrowse.toXmlString().toUtf8());
+	result = m_pSession->browse(serviceSettings, nodeToBrowse, browseContext, continuationPoint, *initArrayReference);
+
+	if (result.isGood())
+	{
+		// print results
+		printBrowseResults(*initArrayReference);
+		//printf("ContinuationPoint Size %i \n", continuationPoint.length());
+
+		// continue browsing
+		while (continuationPoint.length() > 0)
+		{
+			printf("\nContinuationPoint is set. BrowseNext...\n");
+			// browse next
+			result = m_pSession->browseNext(serviceSettings, OpcUa_False, continuationPoint, *initArrayReference);
+
+			if (result.isGood())
+			{
+				// print results
+				printBrowseResults(*initArrayReference);
+			}
+			else
+			{
+				// Service call failed
+				printf("BrowseNext failed with status %s\n", result.toString().toUtf8());
+			}
+		}
+	}
+	else
+	{
+		// Service call failed
+		printf("Browse failed with status %s\n", result.toString().toUtf8());
+	}
+
+	OpcUa_UInt32 i = 0;
+	referenceDescriptionsPrevious = (*initArrayReference);
+	printf("My size is %i\n", referenceDescriptionsPrevious.length());
+	for (i = 0; i < OpcUa_UInt32(referenceDescriptionsPrevious.length()); i++)
+	{
+		resultRecursive = browseAndReturnReferences(referenceDescriptionsPrevious[i].NodeId.NodeId, 0, initArrayReference);
+		numberOfNode++;
+	}
+	printf("Job done \n");
+	printf("index = %i \n", i);
+
+	return result;
+}
+
 UaStatus SampleClient::writeCyclicValues(const UaVariantArray& valuesToWrite)
 {
 	UaStatus result;
@@ -783,28 +867,20 @@ UaStatus SampleClient::browseInternal(const UaNodeId& nodeToBrowse, OpcUa_UInt32
 	browseContext.maxReferencesToReturn = maxReferencesToReturn;
 
 	printf("\nBrowsing from Node %s...\n", nodeToBrowse.toXmlString().toUtf8());
-	result = m_pSession->browse(
-		serviceSettings,
-		nodeToBrowse,
-		browseContext,
-		continuationPoint,
-		referenceDescriptions);
+	result = m_pSession->browse(serviceSettings, nodeToBrowse, browseContext, continuationPoint, referenceDescriptions);
 
 	if (result.isGood())
 	{
 		// print results
 		printBrowseResults(referenceDescriptions);
+		printf("ContinuationPoint Size %i", continuationPoint.length());
 
 		// continue browsing
 		while (continuationPoint.length() > 0)
 		{
 			printf("\nContinuationPoint is set. BrowseNext...\n");
 			// browse next
-			result = m_pSession->browseNext(
-				serviceSettings,
-				OpcUa_False,
-				continuationPoint,
-				referenceDescriptions);
+			result = m_pSession->browseNext(serviceSettings, OpcUa_False, continuationPoint, referenceDescriptions);
 
 			if (result.isGood())
 			{
