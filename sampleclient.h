@@ -28,6 +28,8 @@
 
 #include "uabase.h"
 #include "uaclientsdk.h"
+#include <iostream>
+#include <fstream>
 
 class SampleSubscription;
 class Configuration;
@@ -68,8 +70,9 @@ public:
 	 /*Write values cyclically to the configured nodes*/
 	UaStatus writeCyclicValues(const UaVariantArray& valuesToWrite);
 	UaStatus writeInternalCyclicValues(const UaNodeIdArray& nodesToWrite, const UaVariantArray& valuesToWrite);
-	UaStatus browseAndReturnReferences(const UaNodeId& nodeToBrowse, OpcUa_UInt32 maxReferencesToReturn, UaReferenceDescriptions *initArrayReference);
-	UaStatus browseFromRoot();
+	/*Browse the nodes and return the references (for now it is only displayed)*/
+	UaStatus browseAndReturnReferences(const UaNodeId& nodeToBrowse, OpcUa_UInt32 maxReferencesToReturn, UaReferenceDescriptions *initArrayReference, int depthLevel);
+	UaStatus browseFromRoot(); //Test
 
 	//Get the float values
 	vector<float> getOpcUaFloat();
@@ -89,6 +92,7 @@ private:
 	UaStatus findSecureEndpoint(SessionSecurityInfo& sessionSecurityInfo);
 	UaStatus checkServerCertificateTrust(SessionSecurityInfo& sessionSecurityInfo);
 	void printBrowseResults(const UaReferenceDescriptions& referenceDescriptions);
+	void writeFileFromBrowseResult(const UaReferenceDescriptions& referenceDescriptions, int depthLevel);
 	void printCertificateData(const UaByteString& serverCertificate);
 	int userAcceptCertificate();
 
@@ -98,6 +102,7 @@ private:
 	UaClient::ServerStatus  m_serverStatus;
 	UaNodeIdArray           m_registeredNodes;
 	SampleSubscription* m_pSampleSubscription;
+	ofstream resultOpcUabrowsingTxt;
 };
 
 

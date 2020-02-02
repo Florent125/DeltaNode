@@ -11,8 +11,20 @@ using namespace std;
 
 class leafOpcUaClient :  public UaSessionCallback
 {
+	//Classic constructor
 	leafOpcUaClient();
-	leafOpcUaClient(char *pAddress);
+	//Constructor using the address of the OpcUa server
+	leafOpcUaClient(char *pAddress); 
+	//Destructor
+	~leafOpcUaClient();
+
+public: //Variables
+
+public: //Functions
+
+private: //Variables
+
+private: //Functions
 
 };
 

@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
+#include <iostream>
+#include <fstream>
 
 
 
@@ -28,6 +30,7 @@ int main(int, char* [])
 	//**Init OpcUa variables**//
 	//************************//
 	UaStatus status;
+	UaStatus browsingStatus;
 
 	//Initialize the UA Stack platform layer
 	UaPlatformLayer::init();
@@ -38,6 +41,7 @@ int main(int, char* [])
 	//Get current path to build configuration file name
 	UaString sConfigFile(getAppPath());
 	sConfigFile += "/mySampleconfig.ini";
+
 
 	//Create configuration object and load configuration
 	Configuration* pMyConfiguration = new Configuration();
@@ -81,22 +85,22 @@ int main(int, char* [])
 		switch (step)
 		{
 			case STATE_INIT:
-				cout << "Init step" << endl;
-				step = STATE_CONNECT_VREP;
+				printf("Init step \n");
+				step = STATE_CONNECT_COPPELIASIM;
 
 				//Testing OpcUa
 				step = STATE_CONNECT_OPCUA;
 			break;
 
-			case STATE_CONNECT_VREP:
-				cout << "Connect VREP step" << endl;
+			case STATE_CONNECT_COPPELIASIM:
+				printf("Connect CoppeliaSim step \n");
 				//! Todo Naresh: check to run this in parallel with real robot driver. May need to integrate my planner
 				simxFinish(-1);                                                     //! Close any previously unfinished business
 				clientID = simxStart((simxChar*)"127.0.0.1", 19997, true, true, 5000, 5);  //!< Main connection to V-REP
 				Sleep(1000);
 				if (clientID != -1)
 				{
-					cout << "Connection status to VREP: SUCCESS" << endl;
+					cout << "Connection status to VREP: SUCCESS \n" << endl;
 					simxInt syncho = simxSynchronous(clientID, 0);
 					int start = simxStartSimulation(clientID, simx_opmode_oneshot);
 					
@@ -119,7 +123,7 @@ int main(int, char* [])
 					switch (connectionType)
 					{
 					case TYPE_OPCUA:
-						cout << "OpcUa connection chosen" << endl;
+						printf("OpcUa connection chosen");
 						step = STATE_CONNECT_OPCUA;						
 						break;
 					}
@@ -131,7 +135,7 @@ int main(int, char* [])
 			break;
 
 			case STATE_CONNECT_OPCUA:
-				cout << "Connect OpcUa step" << endl;
+				printf("Connect OpcUa step \n");
 				status = pMyConfiguration->loadConfiguration(sConfigFile);
 
 				//Loading Configuration succeeded
@@ -148,14 +152,14 @@ int main(int, char* [])
 					pMyConfiguration = NULL;
 				}
 
-				/*if (status.isGood())
+				if (status.isGood())
 				{
 					// Create subscription
 					status = pMyClient->subscribe();
 
 					//OpcUa connection is done, go to STATE_RUN_CONNECTION
 					step = STATE_RUN_CONNECTION;
-				}*/
+				}
 
 				step = STATE_TESTING_PURPOSE;
 
@@ -163,23 +167,29 @@ int main(int, char* [])
 
 
 			case STATE_CONNECT_BR_PVI:
-				cout << "Connect PVI step" << endl;
+				printf("Connect PVI step \n");
+
+				break;
+
+			case STATE_BROWSE_OPCUA:
+				printf("Browsing the available variables of the OpcUa server");
+				browsingStatus = pMyClient->browseFromRoot();
 
 				break;
 
 			case STATE_RUN_CONNECTION:
-				cout << "Code is running" << endl;
+				printf("Code is running \n");
 				if (status.isGood())
 				{
 					opcUaFloat = pMyClient->getOpcUaFloat();
 					opcUaBool = pMyClient->getOpcUaBool();
 					
-					simxSetJointPosition(clientID, lbrJoint1, opcUaFloat[0] * (PI / 180), simx_opmode_streaming + 5);
-					simxSetJointPosition(clientID, lbrJoint2, opcUaFloat[1] * (PI / 180), simx_opmode_streaming + 5);
-					simxSetJointPosition(clientID, lbrJoint3, opcUaFloat[2] * (PI / 180), simx_opmode_streaming + 5);
-					simxSetJointPosition(clientID, lbrJoint4, opcUaFloat[3] * (PI / 180), simx_opmode_streaming + 5);
-					simxSetJointPosition(clientID, lbrJoint5, opcUaFloat[4] * (PI / 180), simx_opmode_streaming + 5);
-					simxSetJointPosition(clientID, lbrJoint6, opcUaFloat[5] * (PI / 180), simx_opmode_streaming + 5);
+					simxSetJointPosition(clientID, lbrJoint1, opcUaFloat[0] * (PI / 180), simx_opmode_streaming + 20);
+					simxSetJointPosition(clientID, lbrJoint2, opcUaFloat[1] * (PI / 180), simx_opmode_streaming + 20);
+					simxSetJointPosition(clientID, lbrJoint3, opcUaFloat[2] * (PI / 180), simx_opmode_streaming + 20);
+					simxSetJointPosition(clientID, lbrJoint4, opcUaFloat[3] * (PI / 180), simx_opmode_streaming + 20);
+					simxSetJointPosition(clientID, lbrJoint5, opcUaFloat[4] * (PI / 180), simx_opmode_streaming + 20);
+					simxSetJointPosition(clientID, lbrJoint6, opcUaFloat[5] * (PI / 180), simx_opmode_streaming + 20);
 
 					simxSetIntegerSignal(clientID, "BaxterVacuumCup_active", opcUaBool[6], simx_opmode_oneshot_wait); //Vacuum value
 
@@ -200,21 +210,20 @@ int main(int, char* [])
 
 
 			case STATE_STOP_CONNECTION:
-				cout << "Connection stopped" << endl;
-
+				printf("Connection stopped");
 				break;
 
 			case STATE_EXIT:
-				cout << "Exit step" << endl;
+				printf("Exit step");
 				exit = true;
 				break;
 
 			case STATE_ERROR:
-				cout << "An error occured" << endl;
+				printf("An error occured");
 				break;
 
 			case STATE_TESTING_PURPOSE:
-				
+
 				// Wait for user command.
 				printf("\nPress Enter to do a simple browse\n");
 				getchar();
@@ -224,7 +233,7 @@ int main(int, char* [])
 				printf("\nPress Enter to browse with continuation point\n");
 				getchar();
 				// Browse with continuation point
-				status = pMyClient->browseContinuationPoint();
+				status = pMyClient->browseFromRoot();
 				
 				break;
 

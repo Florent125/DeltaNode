@@ -32,6 +32,8 @@
 #include "uaplatformdefs.h"
 #include <uaarraytemplates.h>
 #include <opcua_builtintypes.h>
+#include <iostream>
+#include <fstream>
 
 
 SampleClient::SampleClient()
@@ -536,12 +538,20 @@ UaStatus SampleClient::browseSimple()
 
 UaStatus SampleClient::browseFromRoot()
 {
-	UaStatus result;
+	UaStatus result, resultCreateNodeArray;
 	UaNodeId nodeToBrowse;
+	UaReferenceDescriptions testReferenceDescriptions;
 
-	// browse from root folder with no limitation of references to return
+	//Result into a document
+	resultOpcUabrowsingTxt.open("C:/Users/flore/Documents/00_LeafRobotics/00_Technique/200_DigitalTwin/DeltaNode/resultBrowsingOpcUa.txt");
+
+	// browse from root folder without limitation of references to return
 	nodeToBrowse = UaNodeId(OpcUaId_RootFolder);
-	result = browseInternal(nodeToBrowse, 0);
+	resultCreateNodeArray = browseAndReturnReferences(nodeToBrowse, 0, &testReferenceDescriptions, 0);
+
+	resultOpcUabrowsingTxt.close();
+
+	printf("Found %i Nodes", numberOfNode);
 
 	return result;
 }
@@ -562,7 +572,7 @@ UaStatus SampleClient::browseContinuationPoint()
 	nodeToBrowse = UaNodeId("Demo.Static.Scalar", 2); //Demo scalaire
 	nodeToBrowse = UaNodeId(OpcUaId_RootFolder); //RootFolder
 	//result = browseInternal(nodeToBrowse, 0);
-	resultCreateNodeArray = browseAndReturnReferences(nodeToBrowse, 0, &testReferenceDescriptions);
+	resultCreateNodeArray = browseAndReturnReferences(nodeToBrowse, 0, &testReferenceDescriptions, 0);
 	//printf("Print Results again \n");
 	//printBrowseResults(testReferenceDescriptions);
 	printf("Found %i Nodes", numberOfNode);
@@ -689,7 +699,7 @@ UaStatus SampleClient::writeInternalCyclicValues(const UaNodeIdArray& nodesToWri
 	return result;
 }
 
-UaStatus SampleClient::browseAndReturnReferences(const UaNodeId& nodeToBrowse, OpcUa_UInt32 maxReferencesToReturn, UaReferenceDescriptions* initArrayReference)
+UaStatus SampleClient::browseAndReturnReferences(const UaNodeId& nodeToBrowse, OpcUa_UInt32 maxReferencesToReturn, UaReferenceDescriptions* initArrayReference, int depthLevel)
 {
 	UaStatus result, resultRecursive;
 
@@ -697,6 +707,7 @@ UaStatus SampleClient::browseAndReturnReferences(const UaNodeId& nodeToBrowse, O
 	BrowseContext browseContext;
 	UaByteString continuationPoint;
 	UaReferenceDescriptions referenceDescriptionsPrevious;
+	string nodeToBrowseStr;
 
 	// configure browseContext
 	browseContext.browseDirection = OpcUa_BrowseDirection_Forward;
@@ -704,14 +715,28 @@ UaStatus SampleClient::browseAndReturnReferences(const UaNodeId& nodeToBrowse, O
 	browseContext.includeSubtype = OpcUa_True;
 	browseContext.maxReferencesToReturn = maxReferencesToReturn;
 
-	printf("\nBrowsing from Node %s...\n", nodeToBrowse.toXmlString().toUtf8());
+	//printf("\nBrowsing from Node %s...\n", nodeToBrowse.toXmlString().toUtf8()); //Better from programming point of view
+	printf("\nBrowsing from Node %s...\n", nodeToBrowse.toFullString().toUtf8()); //Human readable
 	result = m_pSession->browse(serviceSettings, nodeToBrowse, browseContext, continuationPoint, *initArrayReference);
+
+	/*if (resultOpcUabrowsingTxt)
+	{
+		nodeToBrowseStr = nodeToBrowse.toFullString().toUtf8();
+		for (int j = 0; j < depthLevel; j++)
+		{
+			nodeToBrowseStr = "   " + nodeToBrowseStr;
+		}
+		resultOpcUabrowsingTxt << nodeToBrowseStr << endl;
+	}
+	else {
+		printf("THERE IS AN ERROR WITH THE STREAM\n");
+	}*/
 
 	if (result.isGood())
 	{
 		// print results
 		printBrowseResults(*initArrayReference);
-		//printf("ContinuationPoint Size %i \n", continuationPoint.length());
+		printf("Continuation point length %i", continuationPoint.length());
 
 		// continue browsing
 		while (continuationPoint.length() > 0)
@@ -724,6 +749,7 @@ UaStatus SampleClient::browseAndReturnReferences(const UaNodeId& nodeToBrowse, O
 			{
 				// print results
 				printBrowseResults(*initArrayReference);
+				writeFileFromBrowseResult(*initArrayReference, depthLevel);
 			}
 			else
 			{
@@ -740,14 +766,15 @@ UaStatus SampleClient::browseAndReturnReferences(const UaNodeId& nodeToBrowse, O
 
 	OpcUa_UInt32 i = 0;
 	referenceDescriptionsPrevious = (*initArrayReference);
-	printf("My size is %i\n", referenceDescriptionsPrevious.length());
+	//printf("My size is %i\n", referenceDescriptionsPrevious.length());
 	for (i = 0; i < OpcUa_UInt32(referenceDescriptionsPrevious.length()); i++)
 	{
-		resultRecursive = browseAndReturnReferences(referenceDescriptionsPrevious[i].NodeId.NodeId, 0, initArrayReference);
+		resultRecursive = browseAndReturnReferences(referenceDescriptionsPrevious[i].NodeId.NodeId, 0, initArrayReference, depthLevel + 1);
 		numberOfNode++;
 	}
-	printf("Job done \n");
+	/*printf("Job done \n");
 	printf("index = %i \n", i);
+	printf("depth Level = %i \n", depthLevel);*/
 
 	return result;
 }
@@ -925,6 +952,43 @@ void SampleClient::printBrowseResults(const UaReferenceDescriptions& referenceDe
 		printf("[NodeId=%s] ", nodeId.toFullString().toUtf8());
 		printf(")\n");
 	}
+}
+
+void SampleClient::writeFileFromBrowseResult(const UaReferenceDescriptions& referenceDescriptions, int depthLevel)
+{
+	OpcUa_UInt32 i;
+	string nodeStr = "";
+	for (i = 0; i < referenceDescriptions.length(); i++)
+	{
+		nodeStr = "";
+		for (int j = 0; j < depthLevel; j++)
+		{
+			nodeStr = "   " + nodeStr;
+		}
+		nodeStr = nodeStr + "node: ";
+		UaNodeId referenceTypeId(referenceDescriptions[i].ReferenceTypeId);
+		nodeStr = nodeStr + "[Ref= " + referenceTypeId.toString().toUtf8() + "]";
+		UaQualifiedName browseName(referenceDescriptions[i].BrowseName);
+		nodeStr = nodeStr + browseName.toString().toUtf8() + " (";
+		if (referenceDescriptions[i].NodeClass & OpcUa_NodeClass_Object) nodeStr = nodeStr + "Object ";
+		if (referenceDescriptions[i].NodeClass & OpcUa_NodeClass_Variable) nodeStr = nodeStr + "Variable ";
+		if (referenceDescriptions[i].NodeClass & OpcUa_NodeClass_Method) nodeStr = nodeStr + "Method ";
+		if (referenceDescriptions[i].NodeClass & OpcUa_NodeClass_ObjectType) nodeStr = nodeStr + "ObjectType ";
+		if (referenceDescriptions[i].NodeClass & OpcUa_NodeClass_VariableType) nodeStr = nodeStr + "VariableType ";
+		if (referenceDescriptions[i].NodeClass & OpcUa_NodeClass_ReferenceType) nodeStr = nodeStr + "ReferenceType ";
+		if (referenceDescriptions[i].NodeClass & OpcUa_NodeClass_DataType) nodeStr = nodeStr + "DataType ";
+		if (referenceDescriptions[i].NodeClass & OpcUa_NodeClass_View) nodeStr = nodeStr + "View ";
+		UaNodeId nodeId(referenceDescriptions[i].NodeId.NodeId);
+		nodeStr = nodeStr + "[NodeId=" + nodeId.toFullString().toUtf8() +")";
+		if (resultOpcUabrowsingTxt)
+		{
+			resultOpcUabrowsingTxt << nodeStr << endl;
+		}
+		else {
+			printf("THERE IS AN ERROR WITH THE STREAM\n");
+		}
+	}
+	
 }
 
 void SampleClient::printCertificateData(const UaByteString& serverCertificate)
