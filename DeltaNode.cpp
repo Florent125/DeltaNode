@@ -12,12 +12,12 @@
 #include <fstream>
 
 
-
 extern "C" {
 #include "extApi.h"
 }
 
 using namespace std;
+
 #define PI 3.14
 
 #ifdef _WIN32_WCE
@@ -79,6 +79,13 @@ int main(int, char* [])
 	bool exit = false;
 	bool WORK = true;
 	bool testingOnce = FALSE;
+	int choix = 20;
+	int identifierNumeric = 0;
+	int nameSpaceIndex = 0;
+	const char *charToUaString;
+	string stringInput;
+	UaString identifierString;
+	UaNodeId nodeToBrowse;
 
 	while (!exit) {
 
@@ -89,7 +96,10 @@ int main(int, char* [])
 				step = STATE_CONNECT_COPPELIASIM;
 
 				//Testing OpcUa
-				step = STATE_CONNECT_OPCUA;
+				//step = STATE_CONNECT_OPCUA;
+
+				//Testing Purpose
+				//step = STATE_TESTING_PURPOSE;
 			break;
 
 			case STATE_CONNECT_COPPELIASIM:
@@ -159,9 +169,10 @@ int main(int, char* [])
 
 					//OpcUa connection is done, go to STATE_RUN_CONNECTION
 					step = STATE_RUN_CONNECTION;
+					//step = STATE_TESTING_PURPOSE;
 				}
 
-				step = STATE_TESTING_PURPOSE;
+				
 
 			break;
 
@@ -223,18 +234,61 @@ int main(int, char* [])
 				break;
 
 			case STATE_TESTING_PURPOSE:
+				printf("\n TEST STEP");
 
 				// Wait for user command.
-				printf("\nPress Enter to do a simple browse\n");
+				/*printf("\nPress Enter to do a simple browse\n");
 				getchar();
 				// Simple Browse
-				status = pMyClient->browseSimple();
+				status = pMyClient->browseSimple();*/
 
-				printf("\nPress Enter to browse with continuation point\n");
+				printf("\nPress Enter to browse from Root\n");
 				getchar();
 				// Browse with continuation point
 				status = pMyClient->browseFromRoot();
-				
+
+				while (!exit)
+				{
+					printf("Choix:\n");
+					printf("1 - Browse un Numeric\n");
+					printf("2 - Browse un String\n");
+					printf("0 - Quitter le programme\n");
+					cin >> choix;
+					switch (choix)
+					{
+						case 1:
+							printf("Identifier en Numeric:\n");
+							cin >> identifierNumeric;
+							printf("NameSpace:\n");
+							cin >> nameSpaceIndex;
+							nodeToBrowse = UaNodeId(identifierNumeric, nameSpaceIndex);
+							pMyClient->browseInternal(nodeToBrowse, 0);
+							break;
+
+						case 2:
+							printf("Identifier en String:\n");
+							cin >> stringInput;
+							printf("NameSpace:\n");
+							cin >> nameSpaceIndex;
+							charToUaString = stringInput.c_str();
+							identifierString = UaString(charToUaString);
+							nodeToBrowse = UaNodeId(identifierString, nameSpaceIndex);
+							pMyClient->browseInternal(nodeToBrowse, 0);
+							break;
+
+						case 0:
+							exit = true;
+							break;
+
+
+					default:
+						printf("Je n'ai pas compris\n");
+						break;
+					}
+
+
+				}
+
 				break;
 
 		}

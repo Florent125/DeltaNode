@@ -30,12 +30,14 @@
 #include "uaclientsdk.h"
 #include <iostream>
 #include <fstream>
+#include "json.hpp"
 
 class SampleSubscription;
 class Configuration;
 
 using namespace UaClientSdk;
 using namespace std;
+using json = nlohmann::json;
 
 class SampleClient : public UaSessionCallback
 {
@@ -71,8 +73,9 @@ public:
 	UaStatus writeCyclicValues(const UaVariantArray& valuesToWrite);
 	UaStatus writeInternalCyclicValues(const UaNodeIdArray& nodesToWrite, const UaVariantArray& valuesToWrite);
 	/*Browse the nodes and return the references (for now it is only displayed)*/
-	UaStatus browseAndReturnReferences(const UaNodeId& nodeToBrowse, OpcUa_UInt32 maxReferencesToReturn, UaReferenceDescriptions *initArrayReference, int depthLevel);
+	UaStatus browseAndReturnReferences(const UaNodeId& nodeToBrowse, OpcUa_UInt32 maxReferencesToReturn, UaReferenceDescriptions *initArrayReference);
 	UaStatus browseFromRoot(); //Test
+	UaStatus browseInternal(const UaNodeId& nodeToBrowse, OpcUa_UInt32 maxReferencesToReturn);
 
 	//Get the float values
 	vector<float> getOpcUaFloat();
@@ -86,13 +89,15 @@ public:
 
 private:
 	// helper methods
-	UaStatus browseInternal(const UaNodeId& nodeToBrowse, OpcUa_UInt32 maxReferencesToReturn);
 	UaStatus connectInternal(const UaString& serverUrl, SessionSecurityInfo& sessionSecurityInfo);
 	UaStatus writeInternal(const UaNodeIdArray& nodesToWrite, const UaVariantArray& valuesToWrite);
 	UaStatus findSecureEndpoint(SessionSecurityInfo& sessionSecurityInfo);
 	UaStatus checkServerCertificateTrust(SessionSecurityInfo& sessionSecurityInfo);
 	void printBrowseResults(const UaReferenceDescriptions& referenceDescriptions);
-	void writeFileFromBrowseResult(const UaReferenceDescriptions& referenceDescriptions, int depthLevel);
+	/*write a txt file with the different nodes*/
+	void writeTxtFileFromBrowseResult(const UaNodeId& nodeToBrowse, int depthLevel, string browseName);
+	/*write a JSON file with the different nodes*/
+	void writeJSONFileFromBrowseResult(const UaNodeId& nodeToBrowse, int depthLevel, string browseName);
 	void printCertificateData(const UaByteString& serverCertificate);
 	int userAcceptCertificate();
 
@@ -102,7 +107,9 @@ private:
 	UaClient::ServerStatus  m_serverStatus;
 	UaNodeIdArray           m_registeredNodes;
 	SampleSubscription* m_pSampleSubscription;
-	ofstream resultOpcUabrowsingTxt;
+	ofstream m_resultOpcUabrowsingTxt;
+	ofstream m_resultOpcUabrowsingJSON;
+	json m_jsonFileBrowsingResult;
 };
 
 

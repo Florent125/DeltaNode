@@ -41,6 +41,7 @@ SampleClient::SampleClient()
 	m_pSession = new UaSession();
 	m_pConfiguration = new Configuration();
 	m_pSampleSubscription = new SampleSubscription(m_pConfiguration);
+	//m_jsonFileBrowsingResult["Root"] = nullptr;
 }
 
 SampleClient::~SampleClient()
@@ -540,18 +541,29 @@ UaStatus SampleClient::browseFromRoot()
 {
 	UaStatus result, resultCreateNodeArray;
 	UaNodeId nodeToBrowse;
-	UaReferenceDescriptions testReferenceDescriptions;
+	UaReferenceDescriptions nodeReferenceDescriptions;
 
 	//Result into a document
-	resultOpcUabrowsingTxt.open("C:/Users/flore/Documents/00_LeafRobotics/00_Technique/200_DigitalTwin/DeltaNode/resultBrowsingOpcUa.txt");
+	/*m_resultOpcUabrowsingTxt.open("resultBrowsingOpcUa.txt");
+	m_resultOpcUabrowsingJSON.open("resultBrowsingOpcUa.json");*/
 
 	// browse from root folder without limitation of references to return
+	numberOfNode = 0;
 	nodeToBrowse = UaNodeId(OpcUaId_RootFolder);
-	resultCreateNodeArray = browseAndReturnReferences(nodeToBrowse, 0, &testReferenceDescriptions, 0);
+	resultCreateNodeArray = browseAndReturnReferences(nodeToBrowse, 0, &nodeReferenceDescriptions);
 
-	resultOpcUabrowsingTxt.close();
+	/*if (m_resultOpcUabrowsingJSON)
+	{
+		m_resultOpcUabrowsingJSON << m_jsonFileBrowsingResult << endl;
+	}
+	else {
+		printf("THERE IS AN ERROR WITH THE STREAM\n");
+	}
 
-	printf("Found %i Nodes", numberOfNode);
+	m_resultOpcUabrowsingTxt.close();
+	m_resultOpcUabrowsingJSON.close();
+
+	printf("Found %i Nodes \n", numberOfNode);*/
 
 	return result;
 }
@@ -572,7 +584,7 @@ UaStatus SampleClient::browseContinuationPoint()
 	nodeToBrowse = UaNodeId("Demo.Static.Scalar", 2); //Demo scalaire
 	nodeToBrowse = UaNodeId(OpcUaId_RootFolder); //RootFolder
 	//result = browseInternal(nodeToBrowse, 0);
-	resultCreateNodeArray = browseAndReturnReferences(nodeToBrowse, 0, &testReferenceDescriptions, 0);
+	resultCreateNodeArray = browseAndReturnReferences(nodeToBrowse, 0, &testReferenceDescriptions);
 	//printf("Print Results again \n");
 	//printBrowseResults(testReferenceDescriptions);
 	printf("Found %i Nodes", numberOfNode);
@@ -699,7 +711,7 @@ UaStatus SampleClient::writeInternalCyclicValues(const UaNodeIdArray& nodesToWri
 	return result;
 }
 
-UaStatus SampleClient::browseAndReturnReferences(const UaNodeId& nodeToBrowse, OpcUa_UInt32 maxReferencesToReturn, UaReferenceDescriptions* initArrayReference, int depthLevel)
+UaStatus SampleClient::browseAndReturnReferences(const UaNodeId& nodeToBrowse, OpcUa_UInt32 maxReferencesToReturn, UaReferenceDescriptions* initArrayReference)
 {
 	UaStatus result, resultRecursive;
 
@@ -707,7 +719,6 @@ UaStatus SampleClient::browseAndReturnReferences(const UaNodeId& nodeToBrowse, O
 	BrowseContext browseContext;
 	UaByteString continuationPoint;
 	UaReferenceDescriptions referenceDescriptionsPrevious;
-	string nodeToBrowseStr;
 
 	// configure browseContext
 	browseContext.browseDirection = OpcUa_BrowseDirection_Forward;
@@ -719,24 +730,16 @@ UaStatus SampleClient::browseAndReturnReferences(const UaNodeId& nodeToBrowse, O
 	printf("\nBrowsing from Node %s...\n", nodeToBrowse.toFullString().toUtf8()); //Human readable
 	result = m_pSession->browse(serviceSettings, nodeToBrowse, browseContext, continuationPoint, *initArrayReference);
 
-	/*if (resultOpcUabrowsingTxt)
-	{
-		nodeToBrowseStr = nodeToBrowse.toFullString().toUtf8();
-		for (int j = 0; j < depthLevel; j++)
-		{
-			nodeToBrowseStr = "   " + nodeToBrowseStr;
-		}
-		resultOpcUabrowsingTxt << nodeToBrowseStr << endl;
-	}
-	else {
-		printf("THERE IS AN ERROR WITH THE STREAM\n");
-	}*/
-
 	if (result.isGood())
 	{
 		// print results
 		printBrowseResults(*initArrayReference);
-		printf("Continuation point length %i", continuationPoint.length());
+
+		//Write the results into txt file
+		//writeTxtFileFromBrowseResult(nodeToBrowse, depthLevel, browseName);
+
+		//Write the results into json file
+		//writeJSONFileFromBrowseResult(nodeToBrowse, depthLevel, browseName);
 
 		// continue browsing
 		while (continuationPoint.length() > 0)
@@ -749,7 +752,6 @@ UaStatus SampleClient::browseAndReturnReferences(const UaNodeId& nodeToBrowse, O
 			{
 				// print results
 				printBrowseResults(*initArrayReference);
-				writeFileFromBrowseResult(*initArrayReference, depthLevel);
 			}
 			else
 			{
@@ -765,16 +767,16 @@ UaStatus SampleClient::browseAndReturnReferences(const UaNodeId& nodeToBrowse, O
 	}
 
 	OpcUa_UInt32 i = 0;
-	referenceDescriptionsPrevious = (*initArrayReference);
-	//printf("My size is %i\n", referenceDescriptionsPrevious.length());
-	for (i = 0; i < OpcUa_UInt32(referenceDescriptionsPrevious.length()); i++)
+	referenceDescriptionsPrevious = *initArrayReference;
+	//printf("%s \n", browseName);
+
+	/*for (i = 0; i < OpcUa_UInt32(referenceDescriptionsPrevious.length()); i++)
 	{
-		resultRecursive = browseAndReturnReferences(referenceDescriptionsPrevious[i].NodeId.NodeId, 0, initArrayReference, depthLevel + 1);
+		UaQualifiedName browseName(referenceDescriptionsPrevious[i].BrowseName);
+		resultRecursive = browseAndReturnReferences(referenceDescriptionsPrevious[i].NodeId.NodeId, 0, initArrayReference, depthLevel + 1, browseName.toString().toUtf8());
+		
 		numberOfNode++;
-	}
-	/*printf("Job done \n");
-	printf("index = %i \n", i);
-	printf("depth Level = %i \n", depthLevel);*/
+	}*/
 
 	return result;
 }
@@ -954,41 +956,37 @@ void SampleClient::printBrowseResults(const UaReferenceDescriptions& referenceDe
 	}
 }
 
-void SampleClient::writeFileFromBrowseResult(const UaReferenceDescriptions& referenceDescriptions, int depthLevel)
+void SampleClient::writeTxtFileFromBrowseResult(const UaNodeId& nodeToBrowse, int depthLevel, string browseName)
 {
-	OpcUa_UInt32 i;
-	string nodeStr = "";
-	for (i = 0; i < referenceDescriptions.length(); i++)
+	string nodeToBrowseStr;
+	if (m_resultOpcUabrowsingTxt)
 	{
-		nodeStr = "";
+		nodeToBrowseStr = nodeToBrowse.toFullString().toUtf8(); //Human readable
+		nodeToBrowseStr = browseName; //Human readable
 		for (int j = 0; j < depthLevel; j++)
 		{
-			nodeStr = "   " + nodeStr;
+			nodeToBrowseStr = "   " + nodeToBrowseStr;
 		}
-		nodeStr = nodeStr + "node: ";
-		UaNodeId referenceTypeId(referenceDescriptions[i].ReferenceTypeId);
-		nodeStr = nodeStr + "[Ref= " + referenceTypeId.toString().toUtf8() + "]";
-		UaQualifiedName browseName(referenceDescriptions[i].BrowseName);
-		nodeStr = nodeStr + browseName.toString().toUtf8() + " (";
-		if (referenceDescriptions[i].NodeClass & OpcUa_NodeClass_Object) nodeStr = nodeStr + "Object ";
-		if (referenceDescriptions[i].NodeClass & OpcUa_NodeClass_Variable) nodeStr = nodeStr + "Variable ";
-		if (referenceDescriptions[i].NodeClass & OpcUa_NodeClass_Method) nodeStr = nodeStr + "Method ";
-		if (referenceDescriptions[i].NodeClass & OpcUa_NodeClass_ObjectType) nodeStr = nodeStr + "ObjectType ";
-		if (referenceDescriptions[i].NodeClass & OpcUa_NodeClass_VariableType) nodeStr = nodeStr + "VariableType ";
-		if (referenceDescriptions[i].NodeClass & OpcUa_NodeClass_ReferenceType) nodeStr = nodeStr + "ReferenceType ";
-		if (referenceDescriptions[i].NodeClass & OpcUa_NodeClass_DataType) nodeStr = nodeStr + "DataType ";
-		if (referenceDescriptions[i].NodeClass & OpcUa_NodeClass_View) nodeStr = nodeStr + "View ";
-		UaNodeId nodeId(referenceDescriptions[i].NodeId.NodeId);
-		nodeStr = nodeStr + "[NodeId=" + nodeId.toFullString().toUtf8() +")";
-		if (resultOpcUabrowsingTxt)
-		{
-			resultOpcUabrowsingTxt << nodeStr << endl;
-		}
-		else {
-			printf("THERE IS AN ERROR WITH THE STREAM\n");
-		}
+		m_resultOpcUabrowsingTxt << nodeToBrowseStr << endl;
+	}
+	else {
+		printf("THERE IS AN ERROR WITH THE STREAM\n");
 	}
 	
+}
+
+void SampleClient::writeJSONFileFromBrowseResult(const UaNodeId& nodeToBrowse, int depthLevel, string browseName)
+{
+	/*OpcUa_UInt32 i;
+	string nodeToBrowseStr;
+	json localJSON = nullptr;
+	nodeToBrowseStr = nodeToBrowse.
+
+	for (i = 0; i < referenceDescriptions.length(); i++)
+	{
+		//UaQualifiedName browseName(referenceDescriptions[i].BrowseName);		
+		localJSON[referenceDescriptions[i].NodeId.NodeId.Identifier.Numeric] = nullptr;
+	}*/
 }
 
 void SampleClient::printCertificateData(const UaByteString& serverCertificate)
