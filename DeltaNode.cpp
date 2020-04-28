@@ -130,6 +130,7 @@ int main(int, char* [])
 					simxSetJointPosition(clientID, lbrJoint5, 0.0, simx_opmode_oneshot_wait);
 					simxSetJointPosition(clientID, lbrJoint6, 0.0, simx_opmode_oneshot_wait);
 
+
 					switch (connectionType)
 					{
 					case TYPE_OPCUA:

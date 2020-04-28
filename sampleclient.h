@@ -30,14 +30,12 @@
 #include "uaclientsdk.h"
 #include <iostream>
 #include <fstream>
-#include "json.hpp"
 
 class SampleSubscription;
 class Configuration;
 
 using namespace UaClientSdk;
 using namespace std;
-using json = nlohmann::json;
 
 class SampleClient : public UaSessionCallback
 {
@@ -109,7 +107,6 @@ private:
 	SampleSubscription* m_pSampleSubscription;
 	ofstream m_resultOpcUabrowsingTxt;
 	ofstream m_resultOpcUabrowsingJSON;
-	json m_jsonFileBrowsingResult;
 };
 
 
