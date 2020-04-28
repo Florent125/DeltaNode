@@ -67,6 +67,8 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\..\..\..\..\Program Files (x86)\UnifiedAutomation\UaSdkCppBundlePubSubEval\bin\mySampleconfig.ini" />
+    <None Include="..\..\..\..\..\..\..\Program Files (x86)\UnifiedAutomation\UaSdkCppBundlePubSubEval\bin\mySampleconfig.ini">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
